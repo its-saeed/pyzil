@@ -12,9 +12,8 @@ Json-RPC interface of Zilliqa APIs.
 :license: MIT License, see LICENSE for more details.
 """
 
-from jsonrpcclient.exceptions import JsonRpcClientError
-from jsonrpcclient.clients.http_client import HTTPClient
-
+from jsonrpcclient import Ok, request, parse
+import requests
 
 INVALID_PARAMS = "INVALID_PARAMS: Invalid method parameters (invalid name and/or type) recognised"
 
@@ -31,38 +30,24 @@ class ZilliqaAPI:
             self.method_name = method_name
 
         def __call__(self, *params, **kwargs):
-            resp = self.api.call(self.method_name, *params, **kwargs)
-            return resp and resp.data and resp.data.result
+            return self.api.call(self.method_name, *params, **kwargs)
 
     def __init__(self, endpoint: str):
         self.endpoint = endpoint
-        self.api_client = HTTPClient(self.endpoint)
 
     def __getattr__(self, item: str):
         return ZilliqaAPI.APIMethod(self, method_name=item)
 
     def call(self, method_name: str, *params, **kwargs):
-
-        def send_request(*_params):
-            try:
-                return self.api_client.request(
-                    method_name, *_params,
-                    request_id="1",
-                    trim_log_values=True, **kwargs
-                )
-            except JsonRpcClientError as _e:
-                raise APIError(_e)
-
-        try:
-            return send_request(*params)
-        except APIError as e:
-            # fix for jsonrpcclient < 3.3.1
-            if str(e) == INVALID_PARAMS:
-                if len(params) == 1 and isinstance(params[0], (dict, list)):
-                    params = (list(params),)
-                    return send_request(*params)
-            raise e
-
+        response = requests.post(
+                self.endpoint, json=request(method=method_name, params=params)
+            )
+        parsed = parse(response.json())
+        if isinstance(parsed, Ok):
+            return parsed.result
+        else:
+            print(parsed.message)
+            raise APIError(parsed.message)
 
 if "__main__" == __name__:
     _api = ZilliqaAPI("https://dev-api.zilliqa.com/")
