@@ -1,9 +1,9 @@
-Click==7.0
-eth-hash==0.2.0
-fastecdsa==2.1.2
-jsonrpcclient==3.3.5
-protobuf==3.11.3
-pycryptodome==3.9.7
+Click==8.1.7
+eth-hash==0.6.0
+fastecdsa==2.3.1
+jsonrpcclient==4.0.3
+protobuf==4.25.2
+pycryptodome==3.20.0
 pyethash==0.1.27
-requests==2.23.0
-urllib3==1.25.9
+requests==2.31.0
+urllib3==2.1.0
